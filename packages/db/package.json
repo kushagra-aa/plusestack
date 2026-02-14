@@ -1,0 +1,23 @@
+{
+    "name": "@pulsestack/db",
+    "version": "1.0.0",
+    "private": true,
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "scripts": {
+        "build": "tsc",
+        "dev": "tsc --watch",
+        "lint": "eslint src --ext .ts"
+    },
+    "dependencies": {
+        "drizzle-orm": "^0.29.3"
+    },
+    "optionalDependencies": {
+        "better-sqlite3": "^9.3.0"
+    },
+    "devDependencies": {
+        "@types/better-sqlite3": "^7.6.8",
+        "drizzle-kit": "^0.20.10",
+        "typescript": "^5.3.3"
+    }
+}
