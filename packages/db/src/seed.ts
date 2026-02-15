@@ -12,6 +12,7 @@ import {
     NewNotificationReceipt,
 } from './schema';
 import { v4 as uuidv4 } from 'uuid';
+import bcrypt from 'bcryptjs';
 
 async function seed() {
     console.log('🌱 Seeding database...');
@@ -32,7 +33,8 @@ async function seed() {
     const adminUser: NewUser = {
         id: adminId,
         email: 'admin@pulsestack.com',
-        passwordHash: 'hashed_password_placeholder', // In real app, hash this
+        // Password is 'password123'
+        passwordHash: bcrypt.hashSync('password123', 10),
         systemRole: 'admin',
         createdAt: new Date(),
     };
@@ -40,7 +42,8 @@ async function seed() {
     const regularUser: NewUser = {
         id: userId,
         email: 'user@pulsestack.com',
-        passwordHash: 'hashed_password_placeholder',
+        // Password is 'password123'
+        passwordHash: bcrypt.hashSync('password123', 10),
         systemRole: 'user',
         createdAt: new Date(),
     };
