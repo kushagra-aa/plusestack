@@ -1,179 +1,77 @@
-import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-import { Rocket, Zap, Shield } from 'lucide-react';
-import { useAuthStore } from '@/store/authStore';
-import { Notifications } from '@/components/Notifications';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import LoginPage from './pages/auth/LoginPage';
+import SignupPage from './pages/auth/SignupPage';
+import { useAuth } from './store/useAuth';
+import { NotificationBell } from './features/notifications/NotificationBell';
+import { useAuthActions } from './hooks/auth/useAuthActions';
+import { Button } from './components/ui/button';
+import { LogOut } from 'lucide-react';
 
-function App() {
-    const { isAuthenticated, login, logout, user } = useAuthStore();
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+    const token = useAuth((state) => state.token);
+    if (!token) return <Navigate to="/login" replace />;
+    return <>{children}</>;
+};
 
-    const handleLogin = async () => {
-        const email = 'test@example.com';
-        const password = 'password123';
-
-        try {
-            const response = await fetch('http://localhost:4000/api/v1/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password }),
-            });
-
-            let data = await response.json();
-
-            if (!response.ok) {
-                // If login failed, try signup/create
-                if (response.status === 401 || response.status === 404 || data.error === 'Invalid credentials') {
-                    console.log('Login failed, trying signup...');
-                    const signupResponse = await fetch('http://localhost:4000/api/v1/auth/signup', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, password }),
-                    });
-
-                    if (!signupResponse.ok) {
-                        alert('Login and Signup failed');
-                        return;
-                    }
-                    data = await signupResponse.json();
-                } else {
-                    alert('Login failed: ' + data.error);
-                    return;
-                }
-            }
-
-            login(data.token, {
-                id: data.user.id,
-                email: data.user.email,
-                role: data.user.systemRole
-            });
-
-        } catch (error) {
-            console.error('Auth error:', error);
-            alert('Authentication error');
-        }
-    };
+const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
+    const { logout } = useAuthActions();
+    const user = useAuth((state) => state.user);
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
-            <Notifications />
-
-            <div className="container mx-auto px-4 py-8 flex justify-end">
-                {isAuthenticated ? (
+        <div className="min-h-screen bg-slate-50">
+            <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur">
+                <div className="container flex h-16 items-center justify-between py-4 max-w-7xl mx-auto px-4">
+                    <div className="font-bold text-xl text-primary">PulseStack</div>
                     <div className="flex items-center gap-4">
-                        <span className="text-sm font-medium">Logged in as {user?.email}</span>
-                        <Button variant="outline" onClick={logout}>Logout</Button>
+                        <span className="text-sm text-muted-foreground hidden sm:inline-block">
+                            {user?.email}
+                        </span>
+                        <NotificationBell />
+                        <Button variant="ghost" size="icon" onClick={logout}>
+                            <LogOut className="h-5 w-5" />
+                        </Button>
                     </div>
-                ) : (
-                    <Button onClick={handleLogin}>Simulate Login</Button>
-                )}
-            </div>
-
-            <div className="container mx-auto px-4 py-16">
-                <div className="max-w-6xl mx-auto">
-                    {/* Header */}
-                    <div className="text-center mb-12">
-                        <div className="flex items-center justify-center mb-4">
-                            <Rocket className="h-12 w-12 text-primary mr-3" />
-                            <h1 className="text-5xl font-bold text-foreground">
-                                PulseStack
-                            </h1>
-                        </div>
-                        <p className="text-xl text-muted-foreground mb-6">
-                            Real-time notification infrastructure system
-                        </p>
-                        <div className="flex gap-4 justify-center">
-                            <Button size="lg">Get Started</Button>
-                            <Button size="lg" variant="outline">
-                                Learn More
-                            </Button>
-                        </div>
-                    </div>
-
-                    {/* Feature Cards */}
-                    <div className="grid md:grid-cols-3 gap-6 mb-12">
-                        <Card>
-                            <CardHeader>
-                                <Zap className="h-8 w-8 text-primary mb-2" />
-                                <CardTitle>Lightning Fast</CardTitle>
-                                <CardDescription>
-                                    Built with performance in mind
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm text-muted-foreground">
-                                    Real-time notifications delivered instantly with Socket.io
-                                    and optimized backend infrastructure.
-                                </p>
-                            </CardContent>
-                        </Card>
-
-                        <Card>
-                            <CardHeader>
-                                <Shield className="h-8 w-8 text-primary mb-2" />
-                                <CardTitle>Secure & Reliable</CardTitle>
-                                <CardDescription>
-                                    Enterprise-grade security
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm text-muted-foreground">
-                                    JWT authentication, role-based access control, and encrypted
-                                    communications keep your data safe.
-                                </p>
-                            </CardContent>
-                        </Card>
-
-                        <Card>
-                            <CardHeader>
-                                <Rocket className="h-8 w-8 text-primary mb-2" />
-                                <CardTitle>Scalable</CardTitle>
-                                <CardDescription>
-                                    Grows with your needs
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm text-muted-foreground">
-                                    Microservice-ready architecture with shared packages for
-                                    future SaaS expansion.
-                                </p>
-                            </CardContent>
-                        </Card>
-                    </div>
-
-                    {/* Getting Started Card */}
-                    <Card className="bg-card">
-                        <CardHeader>
-                            <CardTitle>Ready to Build</CardTitle>
-                            <CardDescription>
-                                Your monorepo infrastructure is set up and ready
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-2">
-                                <p className="text-sm">
-                                    ✅ Tailwind CSS v4.1 with ShadCN components
-                                </p>
-                                <p className="text-sm">✅ TypeScript strict mode enabled</p>
-                                <p className="text-sm">✅ Express API with Socket.io</p>
-                                <p className="text-sm">✅ React with Zustand & Tanstack Query</p>
-                            </div>
-                        </CardContent>
-                        <CardFooter>
-                            <Button variant="secondary" className="w-full">
-                                View Documentation
-                            </Button>
-                        </CardFooter>
-                    </Card>
                 </div>
-            </div>
+            </header>
+            <main className="container max-w-7xl mx-auto px-4 py-8">
+                {children}
+            </main>
         </div>
+    );
+};
+
+function App() {
+    return (
+        <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route
+                path="/dashboard"
+                element={
+                    <ProtectedRoute>
+                        <DashboardLayout>
+                            <div className="space-y-6">
+                                <div>
+                                    <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+                                    <p className="text-muted-foreground">
+                                        Welcome to your PulseStack dashboard.
+                                    </p>
+                                </div>
+                                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                    <div className="p-6 bg-white rounded-xl border shadow-sm space-y-2">
+                                        <h3 className="font-semibold">Quick Start</h3>
+                                        <p className="text-sm text-muted-foreground">
+                                            Start by exploring your notifications bell on the top right.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </DashboardLayout>
+                    </ProtectedRoute>
+                }
+            />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
     );
 }
 
