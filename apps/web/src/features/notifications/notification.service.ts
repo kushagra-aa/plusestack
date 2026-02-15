@@ -37,4 +37,15 @@ export const notificationService = {
         const response = await api.delete(`/notifications/${id}`);
         return response.data;
     },
+
+    createNotification: async (data: {
+        title: string;
+        message: string;
+        type: 'info' | 'success' | 'warning' | 'error' | 'system';
+        broadcast: boolean;
+        targetUserId?: string;
+    }) => {
+        const response = await api.post('/notifications', data);
+        return response.data;
+    },
 };

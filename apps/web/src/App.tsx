@@ -6,6 +6,8 @@ import { NotificationBell } from './features/notifications/NotificationBell';
 import { useAuthActions } from './hooks/auth/useAuthActions';
 import { Button } from './components/ui/button';
 import { LogOut } from 'lucide-react';
+import { PublishNotificationCard } from './features/notifications/PublishNotificationCard';
+import { cn } from './lib/utils';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const token = useAuth((state) => state.token);
@@ -41,6 +43,9 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 };
 
 function App() {
+    const workspace = useAuth((state) => state.workspace);
+    const isAdmin = workspace?.role === 'owner' || workspace?.role === 'admin';
+
     return (
         <Routes>
             <Route path="/login" element={<LoginPage />} />
@@ -57,7 +62,11 @@ function App() {
                                         Welcome to your PulseStack dashboard.
                                     </p>
                                 </div>
-                                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                <div className={cn(
+                                    "grid gap-6",
+                                    isAdmin ? "md:grid-cols-2" : "max-w-md mx-auto"
+                                )}>
+                                    {isAdmin && <PublishNotificationCard />}
                                     <div className="p-6 bg-white rounded-xl border shadow-sm space-y-2">
                                         <h3 className="font-semibold">Quick Start</h3>
                                         <p className="text-sm text-muted-foreground">
