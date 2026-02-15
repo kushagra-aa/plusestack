@@ -37,4 +37,6 @@ Thumbs.db
 coverage/
 .cache/
 
+# Planning and Testing
 PLAN/
+scripts/
