@@ -2,6 +2,7 @@ import { db } from '@pulsestack/db';
 import { notifications, notificationReceipts, workspaceMembers } from '@pulsestack/db';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
+import { emitToUser, emitToWorkspace } from '../../sockets/socketManager';
 
 interface CreateNotificationParams {
     workspaceId: string;
@@ -17,10 +18,10 @@ export class NotificationsService {
     static async create(params: CreateNotificationParams) {
         const { workspaceId, senderId, title, message, type, broadcast, targetUserId } = params;
 
-        // Start transaction
-        return await db.transaction(async (tx) => {
+        const { notification, recipientIds } = await db.transaction(async (tx) => {
             // 1. Create Notification
             const notificationId = uuidv4();
+            const now = new Date();
             await tx.insert(notifications).values({
                 id: notificationId,
                 workspaceId,
@@ -29,13 +30,14 @@ export class NotificationsService {
                 message,
                 type,
                 broadcast,
-                createdAt: new Date(),
+                // @ts-ignore - drizzle type mismatch if any
+                createdAt: now,
             });
 
             // 2. Determine Recipients
             let recipientIds: string[] = [];
 
-            if (broadcast) {
+            if (broadcast) { // Fixed: using param broadcast
                 // Fetch all workspace members
                 const members = await tx.select({ userId: workspaceMembers.userId })
                     .from(workspaceMembers)
@@ -54,14 +56,47 @@ export class NotificationsService {
                     notificationId,
                     userId,
                     isRead: false,
-                    createdAt: new Date(),
+                    createdAt: now,
                 }));
 
                 await tx.insert(notificationReceipts).values(receipts);
             }
 
-            return { notificationId, createdAt: Date.now() };
+            return {
+                notification: {
+                    id: notificationId,
+                    title,
+                    message,
+                    type,
+                    createdAt: now.getTime(), // Sending timestamp
+                },
+                recipientIds
+            };
         });
+
+        // 4. Emit 'notification:new'
+        if (broadcast) {
+            emitToWorkspace(workspaceId, 'notification:new', notification);
+        } else {
+            recipientIds.forEach(uid => emitToUser(uid, 'notification:new', notification));
+        }
+
+        // 5. Emit 'notification:unreadCount'
+        // For broad casts to many users, this might be slow loop, but required by specs.
+        // We use promise.all to speed it up
+        await Promise.all(recipientIds.map(async (uid) => {
+            const count = await this.getUnreadCount(uid);
+            emitToUser(uid, 'notification:unreadCount', { unreadCount: count });
+        }));
+
+        return { notificationId: notification.id, createdAt: notification.createdAt };
+    }
+
+    private static async getUnreadCount(userId: string): Promise<number> {
+        const unreadResult = await db.select({ count: sql<number>`count(*)` })
+            .from(notificationReceipts)
+            .where(and(eq(notificationReceipts.userId, userId), eq(notificationReceipts.isRead, false)));
+        return unreadResult[0].count;
     }
 
     static async findAll(userId: string, page: number, limit: number, filter: 'all' | 'unread') {
@@ -119,11 +154,12 @@ export class NotificationsService {
             ));
 
         // Return updated unread count
-        const unreadResult = await db.select({ count: sql<number>`count(*)` })
-            .from(notificationReceipts)
-            .where(and(eq(notificationReceipts.userId, userId), eq(notificationReceipts.isRead, false)));
+        const unreadCount = await this.getUnreadCount(userId);
 
-        return { success: true, unreadCount: unreadResult[0].count };
+        // Emit updated count to user
+        emitToUser(userId, 'notification:unreadCount', { unreadCount });
+
+        return { success: true, unreadCount };
     }
 
     static async deleteReceipt(userId: string, notificationId: string) {

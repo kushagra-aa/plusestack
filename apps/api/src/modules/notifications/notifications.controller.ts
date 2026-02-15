@@ -4,6 +4,7 @@ import { createNotificationSchema, paginationSchema } from './notifications.vali
 import { db } from '@pulsestack/db';
 import { workspaceMembers } from '@pulsestack/db';
 import { eq } from 'drizzle-orm';
+import { NotificationsService } from './notifications.service';
 
 
 export class NotificationsController {

@@ -8,10 +8,18 @@ interface AuthState {
     logout: () => void;
 }
 
+import { socketClient } from '@/lib/socket';
+
 export const useAuthStore = create<AuthState>((set) => ({
     user: null,
     token: null,
     isAuthenticated: false,
-    login: (token, user) => set({ token, user, isAuthenticated: true }),
-    logout: () => set({ token: null, user: null, isAuthenticated: false }),
+    login: (token, user) => {
+        socketClient.connect(token);
+        set({ token, user, isAuthenticated: true });
+    },
+    logout: () => {
+        socketClient.disconnect();
+        set({ token: null, user: null, isAuthenticated: false });
+    },
 }));

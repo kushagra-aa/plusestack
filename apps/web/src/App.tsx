@@ -8,14 +8,76 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Rocket, Zap, Shield } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
+import { Notifications } from '@/components/Notifications';
 
 function App() {
+    const { isAuthenticated, login, logout, user } = useAuthStore();
+
+    const handleLogin = async () => {
+        const email = 'test@example.com';
+        const password = 'password123';
+
+        try {
+            const response = await fetch('http://localhost:4000/api/v1/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+            });
+
+            let data = await response.json();
+
+            if (!response.ok) {
+                // If login failed, try signup/create
+                if (response.status === 401 || response.status === 404 || data.error === 'Invalid credentials') {
+                    console.log('Login failed, trying signup...');
+                    const signupResponse = await fetch('http://localhost:4000/api/v1/auth/signup', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password }),
+                    });
+
+                    if (!signupResponse.ok) {
+                        alert('Login and Signup failed');
+                        return;
+                    }
+                    data = await signupResponse.json();
+                } else {
+                    alert('Login failed: ' + data.error);
+                    return;
+                }
+            }
+
+            login(data.token, {
+                id: data.user.id,
+                email: data.user.email,
+                role: data.user.systemRole
+            });
+
+        } catch (error) {
+            console.error('Auth error:', error);
+            alert('Authentication error');
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+            <Notifications />
+
+            <div className="container mx-auto px-4 py-8 flex justify-end">
+                {isAuthenticated ? (
+                    <div className="flex items-center gap-4">
+                        <span className="text-sm font-medium">Logged in as {user?.email}</span>
+                        <Button variant="outline" onClick={logout}>Logout</Button>
+                    </div>
+                ) : (
+                    <Button onClick={handleLogin}>Simulate Login</Button>
+                )}
+            </div>
+
             <div className="container mx-auto px-4 py-16">
                 <div className="max-w-6xl mx-auto">
                     {/* Header */}
-                    <Button>Hello</Button>
                     <div className="text-center mb-12">
                         <div className="flex items-center justify-center mb-4">
                             <Rocket className="h-12 w-12 text-primary mr-3" />

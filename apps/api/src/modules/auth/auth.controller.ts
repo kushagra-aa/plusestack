@@ -18,8 +18,13 @@ export class AuthController {
             const ValidatedBody = loginSchema.parse(req.body);
             const result = await AuthService.login(ValidatedBody.email, ValidatedBody.password);
             res.status(200).json(result);
-        } catch (error) {
+        } catch (error: any) {
+            if (error.message === 'Invalid credentials' || error.message === 'User is not a member of any workspace') {
+                res.status(401).json({ error: 'Invalid credentials' });
+                return;
+            }
             next(error);
+            return;
         }
     }
 }
