@@ -10,7 +10,8 @@
         "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
         "db:generate": "pnpm --filter @pulsestack/db db:generate",
         "db:migrate": "pnpm --filter @pulsestack/db db:migrate",
-        "db:seed": "pnpm --filter @pulsestack/db db:seed"
+        "db:seed": "pnpm --filter @pulsestack/db db:seed",
+        "test:script": "pnpm --filter @pulsestack/api test:script"
     },
     "devDependencies": {
         "@typescript-eslint/eslint-plugin": "^6.21.0",

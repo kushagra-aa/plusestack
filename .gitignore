@@ -39,4 +39,4 @@ coverage/
 
 # Planning and Testing
 PLAN/
-scripts/
+!/app/api/scripts/
