@@ -7,17 +7,21 @@
     "scripts": {
         "build": "tsc",
         "dev": "tsc --watch",
-        "lint": "eslint src --ext .ts"
+        "lint": "eslint src --ext .ts",
+        "db:generate": "drizzle-kit generate:sqlite",
+        "db:migrate": "drizzle-kit push:sqlite",
+        "db:seed": "tsx src/seed.ts"
     },
     "dependencies": {
-        "drizzle-orm": "^0.29.3"
-    },
-    "optionalDependencies": {
-        "better-sqlite3": "^9.3.0"
+        "@libsql/client": "^0.17.0",
+        "dotenv": "^16.4.1",
+        "drizzle-orm": "^0.29.3",
+        "uuid": "^13.0.0"
     },
     "devDependencies": {
-        "@types/better-sqlite3": "^7.6.8",
+        "@types/uuid": "^11.0.0",
         "drizzle-kit": "^0.20.10",
+        "tsx": "^4.7.0",
         "typescript": "^5.3.3"
     }
 }
