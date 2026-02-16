@@ -66,3 +66,11 @@ PulseStack is designed to evolve into a developer-first Notification-as-a-Servic
 - **Multi-Channel Delivery**: Automatic fallbacks to Email, SMS, or Slack.
 - **Observability**: Detailed delivery logs and read-receipt analytics.
 - **Tenant Isolation**: Hardened data isolation for true SaaS multi-tenancy.
+
+## Development Notes
+
+This project was developed with the assistance of AI tooling (ChatGPT and Google’s Antigravity editor) for accelerating boilerplate generation, documentation drafting, and testing scripts.
+All architectural decisions, schema design, system tradeoffs, and implementation logic were reviewed and validated manually. AI was used as a productivity multiplier — not as a replacement for system design or reasoning.
+The final architecture, code structure, and scalability considerations reflect deliberate engineering decisions.
+
+Leveraging AI tools allowed me to focus more deeply on system design, data modeling, and real-time delivery architecture rather than repetitive scaffolding.
